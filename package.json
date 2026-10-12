@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "@supabase/supabase-js": "^2.117.3"
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
   }
 }

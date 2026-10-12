@@ -273,3 +273,16 @@ uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
 
 Phase 17 will build the React chatbot interface.
 Phase 10 will combine normalization, residual connections, multi-head attention, and this feed-forward network into a Transformer block.
+# Interview System
+
+## Start the frontend
+
+From the repository root, install the frontend dependencies and start Vite:
+
+```bash
+npm install --prefix frontend
+npm run dev
+```
+
+Vite prints the URL and port when it starts. If port `5173` is already in use,
+Vite automatically selects the next available port, such as `5174`.

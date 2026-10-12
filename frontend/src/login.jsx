@@ -9,57 +9,39 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [canResendConfirmation, setCanResendConfirmation] = useState(false);
 
   function changeMode(nextMode) {
     setMode(nextMode);
     setMessage("");
-    setCanResendConfirmation(false);
     setPassword("");
     setConfirmPassword("");
-  }
-
-  async function resendConfirmation() {
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || loading) return;
-
-    setLoading(true);
-    setMessage("");
-    try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: cleanEmail,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-
-      if (error) throw error;
-
-      setCanResendConfirmation(false);
-      setMessage("Confirmation email sent. Open its link to verify your account.");
-    } catch (error) {
-      console.error("Could not resend confirmation email:", error);
-      setMessage(error.message || "Could not resend the confirmation email.");
-    } finally {
-      setLoading(false);
-    }
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
-    setCanResendConfirmation(false);
 
     const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanEmail || !password) {
-      setMessage("Please enter your email and password.");
+    // Validate email
+    if (!cleanEmail) {
+      setMessage("Please enter your email address.");
       return;
     }
 
+    // Validate password
+    if (mode !== "forgot" && !password) {
+      setMessage("Please enter your password.");
+      return;
+    }
+
+    // Signup validation
     if (mode === "signup") {
       if (!fullName.trim()) {
         setMessage("Please enter your full name.");
@@ -80,47 +62,50 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // SIGN UP
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
             data: {
               full_name: fullName.trim(),
             },
           },
         });
 
-        if (error) throw error;
-
-        if (!data.user) {
-          throw new Error("Account was not created. Please try again.");
+        if (error) {
+          throw error;
         }
 
-        if (data.session) {
-          // App.jsx will detect the new session and open the dashboard.
-          setMessage("Account created successfully!");
-        } else {
-          // Email confirmation is enabled in Supabase.
+        if (data.user && data.session) {
+          setMessage("Account created successfully! You are now logged in.");
+        } else if (data.user) {
           setMessage(
-            "Account submitted! Confirm your email using the link we sent. You’ll be redirected to the dashboard after confirmation. If you aren’t signed in automatically, return here and sign in."
+            "Account created! Please check your email to confirm your account."
           );
-          setMode("login");
-          setPassword("");
-          setConfirmPassword("");
+        } else {
+          setMessage("Unable to create your account. Please try again.");
         }
-      } else if (mode === "login") {
+      }
+
+      // LOGIN
+      else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        // App.jsx listens for the Supabase session and opens the dashboard.
-        setMessage("Login successful!");
-      } else {
+        // App.jsx listens for the Supabase session
+        // and displays the dashboard after successful login.
+      }
+
+      // FORGOT PASSWORD
+      else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(
           cleanEmail,
           {
@@ -128,17 +113,19 @@ export default function Login() {
           }
         );
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        setMessage("If the account exists, a password reset email will be sent.");
+        setMessage(
+          "If an account exists for this email, a password reset link will be sent."
+        );
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      setMessage(error.message || "Something went wrong. Please try again.");
-      setCanResendConfirmation(
-        mode === "login" &&
-          (error.code === "email_not_confirmed" ||
-            /email not confirmed/i.test(error.message || ""))
+
+      setMessage(
+        error.message || "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -149,6 +136,7 @@ export default function Login() {
     <main className="login-page">
       <section className="login-card">
         <div className="login-brand">AI INTERVIEW SYSTEM</div>
+
         <h1>
           {mode === "login"
             ? "Welcome back"
@@ -195,31 +183,76 @@ export default function Login() {
           {mode !== "forgot" && (
             <label>
               Password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                autoComplete={
-                  mode === "signup" ? "new-password" : "current-password"
-                }
-                minLength={mode === "signup" ? 8 : undefined}
-                required
-              />
+
+              <div className="password-field">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete={
+                    mode === "signup"
+                      ? "new-password"
+                      : "current-password"
+                  }
+                  minLength={mode === "signup" ? 8 : undefined}
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="eye-button"
+                  onClick={() =>
+                    setShowPassword((previous) => !previous)
+                  }
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
+                  title={
+                    showPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  {showPassword ? "🙈" : "👁"}
+                </button>
+              </div>
             </label>
           )}
 
           {mode === "signup" && (
             <label>
               Confirm password
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter your password"
-                autoComplete="new-password"
-                required
-              />
+
+              <div className="password-field">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="eye-button"
+                  onClick={() =>
+                    setShowConfirmPassword((previous) => !previous)
+                  }
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  title={
+                    showConfirmPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showConfirmPassword ? "🙈" : "👁"}
+                </button>
+              </div>
             </label>
           )}
 
@@ -234,23 +267,16 @@ export default function Login() {
           )}
 
           {message && (
-            <p className="login-message" role="status">
+            <p className="login-message" role="status" aria-live="polite">
               {message}
             </p>
           )}
 
-          {canResendConfirmation && (
-            <button
-              type="button"
-              className="text-button confirmation-resend"
-              onClick={resendConfirmation}
-              disabled={loading}
-            >
-              {loading ? "Sending..." : "Resend confirmation email"}
-            </button>
-          )}
-
-          <button className="login-submit" type="submit" disabled={loading}>
+          <button
+            className="login-submit"
+            type="submit"
+            disabled={loading}
+          >
             {loading
               ? "Please wait..."
               : mode === "login"
@@ -275,7 +301,9 @@ export default function Login() {
             </>
           ) : (
             <>
-              Already have an account?{" "}
+              {mode === "forgot"
+                ? "Remember your password?"
+                : "Already have an account?"}{" "}
               <button
                 type="button"
                 className="text-button"

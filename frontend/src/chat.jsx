@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowUp,
   BookOpen,
@@ -17,6 +18,8 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
+import { markTodayActive } from './api';
+import './chat.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -53,7 +56,7 @@ const starterPrompts = [
   'Give me a DSA problem about sliding windows.',
 ];
 
-function App() {
+function App({ userId }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -74,6 +77,12 @@ function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isSending]);
+
+  useEffect(() => {
+    if (userId) {
+      markTodayActive(userId).catch((activityError) => setError(activityError.message));
+    }
+  }, [userId]);
 
   async function sendMessage(event) {
     event?.preventDefault();
@@ -169,6 +178,7 @@ function App() {
             <p className="brand-name">Interview Lab</p>
             <p className="brand-subtitle">Your private practice room</p>
           </div>
+          <Link className="chat-dashboard-link" to="/">Dashboard</Link>
           <button className="icon-button mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation">
             <X size={18} />
           </button>

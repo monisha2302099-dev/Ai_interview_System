@@ -1,72 +1,68 @@
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import Login from "./login.jsx";
-import DashboardPage from "./dashboard";
+
+const Dashboard = lazy(() => import("./dashboard.jsx"));
+const Chatbot = lazy(() => import("./chat.jsx"));
+const InterviewPractice = lazy(() => import("./interview.jsx"));
+const ResumeChecker = lazy(() => import("./resume.jsx"));
+
+
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [session, setSession] = useState(undefined);
 
   useEffect(() => {
-    let active = true;
-
-    async function loadSession() {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (!active) return;
-
+    supabase.auth.getSession().then(({ data, error }) => {
       if (error) {
-        console.error("Session error:", error.message);
+        console.error(error);
       }
-
-      setUser(data?.session?.user ?? null);
-      setCheckingSession(false);
-    }
-
-    loadSession();
+      setSession(data?.session ?? null);
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (active) {
-        setUser(session?.user ?? null);
-        setCheckingSession(false);
-      }
+      setSession(session);
     });
 
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout error:", error.message);
-      alert("Could not log out: " + error.message);
-    }
-  }
-
-  if (checkingSession) {
-    return (
-      <div className="app-loading">
-        Checking your login...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Login />;
-  }
-
   return (
-    <DashboardPage
-      userId={user.id}
-      userEmail={user.email}
-      onLogout={handleLogout}
-    />
+    <BrowserRouter>
+      {session === undefined ? (
+        <p className="app-loading">Loading...</p>
+      ) : session ? (
+        <Suspense fallback={<p className="app-loading">Loading...</p>}>
+          <Routes>
+            <Route path="/" element={<Dashboard session={session} />} />
+            <Route
+              path="/interview/technical"
+              element={<InterviewPractice session={session} mode="technical" />}
+            />
+            <Route
+              path="/interview/general"
+              element={<InterviewPractice session={session} mode="general" />}
+            />
+            <Route
+              path="/resume-checker"
+              element={<ResumeChecker session={session} />}
+            />
+            <Route path="/chatbot" element={<Chatbot userId={session.user.id} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      ) : (
+        <Login />
+      )}
+    </BrowserRouter>
   );
 }

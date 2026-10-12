@@ -4,12 +4,16 @@ Phase 17 provides the React chatbot client for the FastAPI backend.
 
 ## Run
 
-Install dependencies and start Vite:
+From the repository root, install dependencies and start Vite:
 
 ```bash
-npm install
+npm install --prefix frontend
 npm run dev
 ```
+
+Alternatively, run `npm run dev` from this directory. Vite prints the local
+URL and port on startup; if port `5173` is busy, it automatically uses the
+next available port.
 
 The development server proxies `/api` to `http://localhost:8000` by default. This avoids browser `localhost` and CORS problems in forwarded/container environments. Set `VITE_API_URL` only when the frontend must call another backend directly:
 
@@ -18,6 +22,17 @@ VITE_API_URL=https://your-api.example.com npm run dev
 ```
 
 The backend must be running separately with `uvicorn backend.app:app --reload --port 8000`.
+
+## Authentication
+
+Authentication uses Supabase email and password. To allow signup and login
+without an email verification step, disable **Confirm email** in the Supabase
+project's Auth settings. The frontend cannot override this project-level policy.
+
+The dashboard's streak and score cards use
+[`20261012000000_practice_analytics.sql`](../supabase/migrations/20261012000000_practice_analytics.sql).
+Apply that migration to the Supabase project before using the analytics cards.
+The interview and resume pages call the FastAPI backend on port `8000`.
 
 ## Current surface
 
