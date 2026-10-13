@@ -334,19 +334,67 @@ class InterviewDataset:
                 evaluation_rubric,
             )
 
+        
         matched_points: list[str] = []
         missing_points: list[str] = []
+
+        # Recognize different ways candidates can express the same idea.
+        extra_cues = {
+            "unique elements": (
+                "unique elements",
+                "different values",
+                "distinct values",
+                "no duplicates",
+                "each value once",
+            ),
+            "duplicates are removed": (
+                "duplicates are removed",
+                "duplicate values",
+                "same value",
+                "only once",
+                "keeps it once",
+                "repeated values",
+                "different values",
+                "unique values",
+            ),
+            "unordered collection": (
+                "unordered",
+                "no particular order",
+                "order is not guaranteed",
+                "no positional order",
+            ),
+            "fast membership testing": (
+                "membership testing",
+                "membership check",
+                "check if a value exists",
+                "check whether an element exists",
+                "fast lookup",
+                "in operator",
+            ),
+        }
+
+        
         for point in record["key_points"]:
             point_text = str(point)
-            cue_words = _RUBRIC_CUES.get(point_text.casefold())
+            point_key = point_text.casefold()
+
+            cue_words = _RUBRIC_CUES.get(point_key)
+
+            if cue_words is None:
+                cue_words = extra_cues.get(point_key)
+
             if cue_words:
                 matched = _cue_matches(answer, list(cue_words))
             else:
                 matched = _semantic_match(answer, point_text)
+
+            # IMPORTANT: Record the evaluation result.
             if matched:
                 matched_points.append(point_text)
             else:
                 missing_points.append(point_text)
+
+
 
         relevance = (
             "off-topic"

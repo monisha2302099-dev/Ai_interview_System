@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from prepare_data import load_and_clean, normalize_text
-
+#from prepare_data import load_and_clean, normalize_text
+from backend.training.prepare_data import load_and_clean, normalize_text
 
 class PrepareDataTests(unittest.TestCase):
     def test_normalize_text_preserves_code_line_breaks(self):

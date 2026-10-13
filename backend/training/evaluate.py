@@ -29,7 +29,7 @@ from backend.training.train import evaluate_model
 try:
     from .semantic_eval import evaluate as semantic_evaluate
 except ImportError:
-    from semantic_eval import evaluate as semantic_evaluate
+    from .semantic_eval import evaluate as semantic_evaluate
 
 # ASSUMPTION 1: this must match how your training text was formatted in
 # backend/training/dataset.py. Change it if your dataset uses another template.

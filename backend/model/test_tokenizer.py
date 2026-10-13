@@ -2,8 +2,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tokenizer import InterviewTokenizer
-
+#from tokenizer import InterviewTokenizer
+from backend.model.tokenizer import InterviewTokenizer
 
 class InterviewTokenizerTests(unittest.TestCase):
     def setUp(self):

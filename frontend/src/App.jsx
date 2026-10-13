@@ -14,55 +14,77 @@ const Chatbot = lazy(() => import("./chat.jsx"));
 const InterviewPractice = lazy(() => import("./interview.jsx"));
 const ResumeChecker = lazy(() => import("./resume.jsx"));
 
-
-
 export default function App() {
   const [session, setSession] = useState(undefined);
 
   useEffect(() => {
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data, error }) => {
       if (error) {
-        console.error(error);
+        console.error("Session error:", error);
       }
-      setSession(data?.session ?? null);
+
+      if (mounted) {
+        setSession(data?.session ?? null);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  if (session === undefined) {
+    return <p className="app-loading">Loading...</p>;
+  }
 
   return (
     <BrowserRouter>
-      {session === undefined ? (
-        <p className="app-loading">Loading...</p>
-      ) : session ? (
-        <Suspense fallback={<p className="app-loading">Loading...</p>}>
+      <Suspense fallback={<p className="app-loading">Loading...</p>}>
+        {!session ? (
+          <Routes>
+            <Route path="*" element={<Login />} />
+          </Routes>
+        ) : (
           <Routes>
             <Route path="/" element={<Dashboard session={session} />} />
+
             <Route
               path="/interview/technical"
-              element={<InterviewPractice session={session} mode="technical" />}
+              element={
+                <InterviewPractice session={session} mode="technical" />
+              }
             />
+
             <Route
               path="/interview/general"
-              element={<InterviewPractice session={session} mode="general" />}
+              element={
+                <InterviewPractice session={session} mode="general" />
+              }
             />
+
             <Route
               path="/resume-checker"
               element={<ResumeChecker session={session} />}
             />
-            <Route path="/chatbot" element={<Chatbot userId={session.user.id} />} />
+
+            <Route
+              path="/chatbot"
+              element={<Chatbot userId={session.user.id} />}
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Suspense>
-      ) : (
-        <Login />
-      )}
+        )}
+      </Suspense>
     </BrowserRouter>
   );
 }

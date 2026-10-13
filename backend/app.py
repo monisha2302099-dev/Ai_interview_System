@@ -18,6 +18,9 @@ from backend.chatbot.interview_dataset import InterviewDataset
 from backend.chatbot.retrieval import QuestionBankRetriever
 from backend.resume.parser import extract_resume_file
 
+from backend.chatbot.model_router import SubjectModelRouter
+#from backend.chatbot.retrieval import QuestionBankRetriever
+#from backend.chatbot.conversation import ConversationManager
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
@@ -159,12 +162,24 @@ def create_app(
     return app
 
 
+
 def _default_app() -> FastAPI:
-    checkpoint = os.getenv("INTERVIEW_CHECKPOINT")
-    vocabulary = os.getenv("INTERVIEW_VOCABULARY")
-    if checkpoint and vocabulary:
-        return create_app(checkpoint_path=checkpoint, vocabulary_path=vocabulary)
-    return create_app()
+    vocabulary = os.getenv(
+        "INTERVIEW_VOCABULARY",
+        "backend/data/processed/vocab.json",
+    )
+
+    router = SubjectModelRouter(
+        vocabulary_path=vocabulary,
+        checkpoint_directory="checkpoints",
+    )
+
+    manager = ConversationManager(
+        router,
+        retriever=QuestionBankRetriever(),
+    )
+
+    return create_app(manager=manager)
 
 
 app = _default_app()
