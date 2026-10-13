@@ -36,7 +36,7 @@ export const ExtractedTextDrawer: React.FC<ExtractedTextDrawerProps> = ({
                 Extracted Resume Document
               </h3>
               <p className="text-xs text-slate-500">
-                Parsed text processed by the ATS & LLM engine
+                Text extracted from the uploaded resume
               </p>
             </div>
           </div>

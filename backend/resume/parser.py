@@ -10,6 +10,7 @@ EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECAS
 PHONE_RE = re.compile(r"(?<!\d)(?:\+?\d[\d\s().-]{7,}\d)(?!\d)")
 URL_RE = re.compile(r"\b(?:https?://|www\.)[^\s<>]+", re.IGNORECASE)
 SECTION_NAMES = {
+    "summary": ("summary", "professional summary", "profile", "objective"),
     "education": ("education", "academic background", "academics"),
     "skills": ("skills", "technical skills", "technologies"),
     "projects": ("projects", "academic projects", "personal projects"),
@@ -18,9 +19,11 @@ SECTION_NAMES = {
     "achievements": ("achievements", "awards", "honors"),
 }
 SKILL_TERMS = (
-    "python", "java", "c++", "c", "javascript", "typescript", "sql", "flask", "fastapi",
+    "python", "java", "c++", "javascript", "typescript", "sql", "flask", "fastapi",
     "react", "node.js", "mongodb", "mysql", "postgresql", "opencv", "pytorch", "tensorflow",
     "docker", "aws", "git", "linux", "html", "css", "machine learning", "deep learning",
+    "pandas", "numpy", "scikit-learn", "excel", "tableau", "statistics", "accessibility",
+    "testing", "redis", "kubernetes", "graphql", "next.js", "express", "agile",
 )
 DEGREE_RE = re.compile(r"\b(?:B\.?Tech|B\.?E\.?|M\.?Tech|M\.?E\.?|BSc|MSc|Bachelor|Master|Ph\.?D)\b[^\n]*", re.IGNORECASE)
 YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
@@ -101,7 +104,17 @@ def extract_resume_file(path: str | Path) -> dict[str, Any]:
         text = "\n".join(page.extract_text() or "" for page in PdfReader(file_path).pages)
     elif suffix == ".docx":
         from docx import Document
-        text = "\n".join(paragraph.text for paragraph in Document(file_path).paragraphs)
+        document = Document(file_path)
+        paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        tables = [
+            "\n".join(cell.text for row in table.rows for cell in row.cells)
+            for table in document.tables
+        ]
+        text = "\n".join([*paragraphs, *tables])
     else:
         raise ValueError("supported resume formats are PDF, DOCX, and TXT")
-    return extract_resume(text)
+    if not text.strip():
+        raise ValueError(
+            "No readable text found. Scanned PDFs require OCR; use a text-based PDF or paste the resume text."
+        )
+    return {"text": text, "profile": extract_resume(text)}

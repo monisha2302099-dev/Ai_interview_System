@@ -2,11 +2,12 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Route,
   Routes,
 } from "react-router-dom";
-import { supabase } from "./supabaseClient";
+import { supabase, supabaseConfigured } from "./supabaseClient";
 import Login from "./login.jsx";
 
 const Dashboard = lazy(() => import("./dashboard.jsx"));
@@ -18,6 +19,8 @@ export default function App() {
   const [session, setSession] = useState(undefined);
 
   useEffect(() => {
+    if (!supabase) return undefined;
+
     let mounted = true;
 
     supabase.auth.getSession().then(({ data, error }) => {
@@ -41,6 +44,66 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  if (!supabaseConfigured) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/resume-checker" element={<ResumeChecker />} />
+          <Route
+            path="*"
+            element={
+              <main
+                style={{
+                  minHeight: "100vh",
+                  display: "grid",
+                  placeItems: "center",
+                  padding: "24px",
+                  background: "#080d1d",
+                  color: "#f1f5ff",
+                  fontFamily: "system-ui, sans-serif",
+                }}
+              >
+                <section
+                  style={{
+                    width: "min(100%, 620px)",
+                    padding: "32px",
+                    border: "1px solid #334155",
+                    borderRadius: "16px",
+                    background: "#111a30",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <h1 style={{ marginTop: 0 }}>Supabase setup required</h1>
+                  <p>
+                    Login and the dashboard need Supabase project settings.
+                    The app could not find them, so it stopped before rendering
+                    the login screen.
+                  </p>
+                  <p>
+                    Add <code>VITE_SUPABASE_URL</code> and{" "}
+                    <code>VITE_SUPABASE_ANON_KEY</code> to{" "}
+                    <code>frontend/.env.local</code>, then restart Vite.
+                    See <code>frontend/README.md</code> for setup steps.
+                  </p>
+                  <p>
+                    You can still use the resume checker locally:{" "}
+                    <Link
+                      to="/resume-checker"
+                      style={{ color: "#93c5fd" }}
+                    >
+                      Open Resume Checker
+                    </Link>
+                    . Start the FastAPI backend on port 8000 first.
+                  </p>
+                </section>
+              </main>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
 
   if (session === undefined) {
     return <p className="app-loading">Loading...</p>;

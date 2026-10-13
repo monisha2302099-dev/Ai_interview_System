@@ -25,7 +25,7 @@ class SubjectModelRouter:
         "os": "os",
         "cn": "cn",
         "html": "html",
-        "chain": "chain",
+        "chain": "blockchain",
     }
 
     def __init__(
@@ -40,48 +40,31 @@ class SubjectModelRouter:
             "cuda" if torch.cuda.is_available() else "cpu"
         )
 
-        self.models: dict[str, Any] = {}
-        self.fallback: Any | None = None
-
-        # Load the existing trained checkpoints; do not train anything.
-        for subject, folder in self.CHECKPOINTS.items():
-            checkpoint = self.checkpoint_directory / folder / "best_model.pt"
-
-            if not checkpoint.is_file():
-                print(f"[Router] Skipping missing checkpoint: {checkpoint}")
-                continue
-
-            try:
-                self.models[subject] = InferenceEngine.from_checkpoint(
-                    checkpoint,
-                    self.vocabulary_path,
-                    device=self.device,
-                )
-                print(f"[Router] Loaded {subject}: {checkpoint}")
-            except Exception as exc:
-                print(f"[Router] Could not load {subject}: {exc}")
-
-        fallback_path = (
-            self.checkpoint_directory
-            / "current_vocab_instruction"
-            / "best_model.pt"
+        self.checkpoints = {
+            subject: self.checkpoint_directory / folder / "best_model.pt"
+            for subject, folder in self.CHECKPOINTS.items()
+            if (self.checkpoint_directory / folder / "best_model.pt").is_file()
+        }
+        self.fallback_checkpoint = (
+            self.checkpoint_directory / "current_vocab_instruction" / "best_model.pt"
         )
-
-        if fallback_path.is_file():
-            try:
-                self.fallback = InferenceEngine.from_checkpoint(
-                    fallback_path,
-                    self.vocabulary_path,
-                    device=self.device,
-                )
-                print("[Router] Loaded general instruction fallback")
-            except Exception as exc:
-                print(f"[Router] Could not load fallback model: {exc}")
-
-        if not self.models and self.fallback is None:
+        if not self.checkpoints and not self.fallback_checkpoint.is_file():
             raise RuntimeError(
                 "No compatible subject or fallback checkpoints could be loaded."
             )
+        self.models: dict[str, Any] = {}
+        self.fallback: Any | None = None
+
+    @property
+    def model_loaded(self) -> bool:
+        return bool(self.models) or self.fallback is not None
+
+    def _load_checkpoint(self, checkpoint: Path) -> Any:
+        return InferenceEngine.from_checkpoint(
+            checkpoint,
+            self.vocabulary_path,
+            device=self.device,
+        )
 
     @staticmethod
     def _latest_user_message(prompt: str) -> str:
@@ -120,16 +103,20 @@ class SubjectModelRouter:
         message = self._latest_user_message(prompt)
         subject = self._select_subject(message)
 
-        engine = self.models.get(subject) if subject else None
-
-        if engine is None:
+        if subject in self.checkpoints:
+            if subject not in self.models:
+                self.models[subject] = self._load_checkpoint(self.checkpoints[subject])
+            engine = self.models[subject]
+        elif self.fallback_checkpoint.is_file():
+            if self.fallback is None:
+                self.fallback = self._load_checkpoint(self.fallback_checkpoint)
             engine = self.fallback
-
-        # If the general model is unavailable, use any loaded subject model.
-        if engine is None and self.models:
-            engine = next(iter(self.models.values()))
-
-        if engine is None:
-            return "No compatible interview model is available."
+        elif self.checkpoints:
+            selected = next(iter(self.checkpoints))
+            if selected not in self.models:
+                self.models[selected] = self._load_checkpoint(self.checkpoints[selected])
+            engine = self.models[selected]
+        else:
+            raise RuntimeError("No compatible interview model is available.")
 
         return engine.generate(prompt)

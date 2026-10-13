@@ -29,6 +29,19 @@ Authentication uses Supabase email and password. To allow signup and login
 without an email verification step, disable **Confirm email** in the Supabase
 project's Auth settings. The frontend cannot override this project-level policy.
 
+Before starting Vite, create `frontend/.env.local` with the URL and publishable
+anon key from your Supabase project's API settings:
+
+```dotenv
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-publishable-anon-key
+```
+
+Restart Vite after changing environment variables. If these values are absent,
+the app displays a setup message rather than a blank page. The resume checker
+remains available at `/resume-checker` without signing in; the dashboard and
+other authenticated pages still require Supabase configuration.
+
 The dashboard's streak and score cards use
 [`20261012000000_practice_analytics.sql`](../supabase/migrations/20261012000000_practice_analytics.sql).
 Apply that migration to the Supabase project before using the analytics cards.

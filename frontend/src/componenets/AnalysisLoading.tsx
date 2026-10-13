@@ -3,12 +3,12 @@ import { Sparkles, CheckCircle2, ShieldCheck, Cpu } from 'lucide-react';
 
 export const AnalysisLoading: React.FC = () => {
   const steps = [
-    'Parsing document layout, typography, and section headers...',
+    'Extracting readable text and section headings...',
     'Extracting technical proficiencies, frameworks, and education...',
-    'Evaluating ATS compatibility and machine-readability...',
-    'Performing semantic gap match against target job role...',
-    'Auditing phrasing, grammar precision, and action verbs...',
-    'Generating recruiter-grade insights and action plan...',
+    'Checking common resume sections and readable structure...',
+    'Comparing resume terms with the target role and job description...',
+    'Checking action verbs and measurable achievement evidence...',
+    'Building a report from the detected resume content...',
   ];
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -32,10 +32,10 @@ export const AnalysisLoading: React.FC = () => {
         </div>
 
         <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-2">
-          Analyzing Your Resume
+          Checking Your Resume
         </h3>
         <p className="text-sm text-slate-500 mb-8">
-          Our AI model is performing a multi-point evaluation across ATS standards, job alignment, and recruiter benchmarks.
+          The report is based on text extracted from your resume and simple, explainable checks. It is guidance, not a hiring prediction.
         </p>
 
         {/* Step Progression List */}
@@ -72,7 +72,7 @@ export const AnalysisLoading: React.FC = () => {
 
         <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
           <ShieldCheck className="w-4 h-4 text-indigo-500" />
-          <span>Strict anti-hallucination verification active</span>
+          <span>Your resume text is analyzed locally by this service and is not sent to an AI provider.</span>
         </div>
       </div>
     </div>

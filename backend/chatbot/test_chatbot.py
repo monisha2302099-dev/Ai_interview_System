@@ -7,6 +7,7 @@ import torch
 
 from backend.chatbot.conversation import ConversationManager
 from backend.chatbot.inference import GenerationConfig, InferenceEngine
+from backend.chatbot.model_router import SubjectModelRouter
 from backend.chatbot.retrieval import QuestionBankRetriever
 from backend.model.model import InterviewLLM
 from backend.model.tokenizer import InterviewTokenizer
@@ -89,6 +90,33 @@ class InferenceTests(unittest.TestCase):
             with patch("backend.chatbot.inference.load_checkpoint_model", return_value=(model, {})):
                 with self.assertRaisesRegex(ValueError, "uses .* tokens.*contains .*Use the vocabulary saved"):
                     InferenceEngine.from_checkpoint("model.pt", vocabulary_path, device=torch.device("cpu"))
+
+
+class ModelRouterTests(unittest.TestCase):
+    def test_loads_only_requested_model_and_caches_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checkpoint = Path(directory) / "python" / "best_model.pt"
+            checkpoint.parent.mkdir()
+            checkpoint.touch()
+            router = SubjectModelRouter(
+                vocabulary_path=Path(directory) / "vocab.json",
+                checkpoint_directory=directory,
+                device=torch.device("cpu"),
+            )
+            engine = FakeGenerator()
+            with patch(
+                "backend.chatbot.model_router.InferenceEngine.from_checkpoint",
+                return_value=engine,
+            ) as load_model:
+                self.assertEqual(router.models, {})
+                self.assertFalse(router.model_loaded)
+                self.assertEqual(router.generate("User: Explain Python"), "Practice response.")
+                self.assertTrue(router.model_loaded)
+                self.assertEqual(router.generate("User: Explain Python again"), "Practice response.")
+            load_model.assert_called_once()
+
+    def test_blockchain_checkpoint_folder_matches_router(self):
+        self.assertEqual(SubjectModelRouter.CHECKPOINTS["chain"], "blockchain")
 
 
 if __name__ == "__main__":

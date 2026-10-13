@@ -16,13 +16,13 @@ import { SAMPLE_RESUMES, SampleResume } from './sampleResumes';
 
 interface UploadSectionProps {
   onAnalyze: (payload: {
+    file?: File;
     fileName?: string;
     fileType?: string;
-    fileBase64?: string;
     resumeText?: string;
     targetRole: string;
     jobDescription?: string;
-  }) => void;
+  }) => void | Promise<void>;
   isLoading: boolean;
 }
 
@@ -31,7 +31,6 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
   isLoading,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileBase64, setFileBase64] = useState<string>('');
   const [resumeText, setResumeText] = useState<string>('');
   const [targetRole, setTargetRole] = useState<string>('Full Stack Software Engineer');
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -52,30 +51,23 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
 
   const handleFileChange = (file: File) => {
     setErrorMessage(null);
-    const validExtensions = ['.pdf', '.docx', '.doc', '.txt'];
+    const validExtensions = ['.pdf', '.docx', '.txt'];
     const lowerName = file.name.toLowerCase();
     const isValid = validExtensions.some((ext) => lowerName.endsWith(ext));
 
     if (!isValid) {
-      setErrorMessage('Please upload a valid PDF (.pdf) or Word (.docx, .doc) file.');
+      setSelectedFile(null);
+      setErrorMessage('Please upload a PDF, DOCX, or TXT file.');
       return;
     }
 
-    if (file.size > 20 * 1024 * 1024) {
-      setErrorMessage('File size exceeds the 20MB limit. Please upload a smaller file.');
+    if (file.size > 5 * 1024 * 1024) {
+      setSelectedFile(null);
+      setErrorMessage('File size exceeds the 5MB limit. Please upload a smaller file.');
       return;
     }
 
     setSelectedFile(file);
-
-    // Read as base64 for server delivery
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFileBase64(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -88,7 +80,6 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
-    setFileBase64('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -100,11 +91,10 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
     setTargetRole(sample.targetRole);
     setJobDescription(sample.jobDescription);
     setSelectedFile(null);
-    setFileBase64('');
     setErrorMessage(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -114,28 +104,36 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
     }
 
     if (inputMode === 'upload') {
-      if (!selectedFile || !fileBase64) {
-        setErrorMessage('Please upload your resume in PDF or DOCX format.');
+      if (!selectedFile) {
+        setErrorMessage('Please upload a PDF, DOCX, or TXT resume.');
         return;
       }
-      onAnalyze({
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileBase64: fileBase64,
-        targetRole: targetRole.trim(),
-        jobDescription: jobDescription.trim(),
-      });
+      try {
+        await onAnalyze({
+          file: selectedFile,
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          targetRole: targetRole.trim(),
+          jobDescription: jobDescription.trim(),
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Resume analysis failed. Please try again.');
+      }
     } else {
       // Text or Sample mode
       if (!resumeText.trim() || resumeText.trim().length < 30) {
         setErrorMessage('Please enter or paste your resume content (at least 30 characters).');
         return;
       }
-      onAnalyze({
-        resumeText: resumeText.trim(),
-        targetRole: targetRole.trim(),
-        jobDescription: jobDescription.trim(),
-      });
+      try {
+        await onAnalyze({
+          resumeText: resumeText.trim(),
+          targetRole: targetRole.trim(),
+          jobDescription: jobDescription.trim(),
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Resume analysis failed. Please try again.');
+      }
     }
   };
 
@@ -149,19 +147,21 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-xs font-semibold mb-3">
             <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-            Resume Scoring & ATS Optimization Engine
+            Resume Structure & Role-Match Review
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-2">
-            AI Resume Checker
+            Resume Checker
           </h2>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Analyze your resume and improve your chances of getting shortlisted.
-            Evaluate ATS compatibility, uncover missing skills, and receive actionable recruiter-grade feedback.
+            Review extracted sections, compare skills with a role or job description, and get practical suggestions based on what your resume actually contains.
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+          <strong>Use this as a guide, not a verdict.</strong> This checker uses text extraction and simple keyword and phrasing rules. It can miss context, make mistakes, and does not test visual layout, run an actual ATS, or provide a full grammar check. Review every suggestion and only include claims that are accurate for you.
+        </div>
         {/* Input Mode Selector */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-3">
           <div className="flex rounded-xl bg-slate-100 p-1 text-xs sm:text-sm font-medium">
@@ -207,8 +207,9 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
 
           <div className="text-xs text-slate-500 flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-            Accepts <span className="font-semibold text-slate-700">PDF</span> and{' '}
-            <span className="font-semibold text-slate-700">DOCX</span> files
+            Accepts <span className="font-semibold text-slate-700">PDF</span>,{' '}
+            <span className="font-semibold text-slate-700">DOCX</span>, and{' '}
+            <span className="font-semibold text-slate-700">TXT</span> files
           </div>
         </div>
 
@@ -242,7 +243,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                       handleFileChange(e.target.files[0]);
                     }
                   }}
-                  accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                  accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                   className="hidden"
                 />
                 <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 shadow-xs">
@@ -252,7 +253,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                   Click to upload or drag & drop your resume
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mb-3">
-                  PDF and DOCX formats supported. Up to 20MB file size.
+                  PDF, DOCX, and TXT formats supported. Up to 5MB file size.
                 </p>
                 <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 bg-indigo-50/80 px-3 py-1.5 rounded-lg border border-indigo-200/50">
                   <FolderOpen className="w-3.5 h-3.5" />
@@ -468,7 +469,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <span>Analyzing Resume with AI...</span>
+                <span>Analyzing Resume...</span>
               </>
             ) : (
               <>

@@ -20,7 +20,7 @@ export const MissingKeywordsSection: React.FC<MissingKeywordsSectionProps> = ({
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900">
-              Missing ATS Keywords
+              Missing Target Terms
             </h3>
             <p className="text-[11px] text-slate-400">
               High-frequency recruitment terms absent from your resume
@@ -33,7 +33,7 @@ export const MissingKeywordsSection: React.FC<MissingKeywordsSectionProps> = ({
       </div>
 
       <p className="text-xs text-slate-600">
-        ATS systems scan for precise keyword tokens. Integrating these missing keywords into your bullet points or skills summary will directly improve searchability for{' '}
+        These role-related terms were not found in the extracted resume text. Add them only when they accurately describe your skills or experience for{' '}
         <span className="font-semibold text-slate-900">{targetRole || 'target positions'}</span>.
       </p>
 

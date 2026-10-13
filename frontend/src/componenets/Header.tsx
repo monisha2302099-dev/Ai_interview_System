@@ -20,14 +20,14 @@ export const Header: React.FC<HeaderProps> = ({ onReset, hasResult }) => {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
                   <GraduationCap className="w-3 h-3" />
-                  AI Interview Prep System
+                  Interview Prep System
                 </span>
                 <span className="hidden md:inline-flex text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                   Team Project • Module 1
                 </span>
               </div>
               <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-none mt-1">
-                AI Resume Checker
+                Resume Checker
               </h1>
             </div>
           </div>
@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ onReset, hasResult }) => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              ATS & LLM Engine Active
+              Evidence-based checks active
             </div>
 
             {hasResult && onReset && (

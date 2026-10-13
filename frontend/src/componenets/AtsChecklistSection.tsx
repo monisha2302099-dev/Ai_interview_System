@@ -1,6 +1,6 @@
 import React from 'react';
 import { AtsCheckItem } from '../types/resume';
-import { ShieldCheck, CheckCircle2, XCircle, FileCheck2, Cpu } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, Cpu } from 'lucide-react';
 
 interface AtsChecklistSectionProps {
   checks: AtsCheckItem[];
@@ -22,15 +22,15 @@ export const AtsChecklistSection: React.FC<AtsChecklistSectionProps> = ({
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900">
-              ATS Compliance Verification Audit
+              Resume Text Checklist
             </h3>
             <p className="text-[11px] text-slate-400">
-              Automated checks simulating enterprise ATS parsers (Workday, Greenhouse, Lever)
+              Simple checks against extracted text; not an ATS parser simulation
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-bold text-slate-700">Passed:</span>
+          <span className="font-bold text-slate-700">Checks passed:</span>
           <span className="font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
             {passedCount} / {checks.length} Rules
           </span>
@@ -75,11 +75,10 @@ export const AtsChecklistSection: React.FC<AtsChecklistSectionProps> = ({
         ))}
       </div>
 
-      {/* Pro tip banner */}
       <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-xs text-slate-600 flex items-center gap-2">
         <Cpu className="w-4 h-4 text-indigo-500 flex-shrink-0" />
         <span>
-          <strong>Recruiter Insight:</strong> More than 75% of resumes are screened out before reaching a human recruiter due to missing keyword tokens or complex unparsable multi-column layouts.
+          <strong>Scope:</strong> These checks inspect text and section headings only. They cannot test visual layout, ATS parsing behavior, or predict hiring outcomes.
         </span>
       </div>
     </div>

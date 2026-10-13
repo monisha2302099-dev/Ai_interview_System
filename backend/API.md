@@ -77,10 +77,17 @@ Evaluation returns a 0–10 score, relevance, detected misconceptions, covered a
 
 ### `POST /resume/analyze`
 
-Upload a `PDF`, `DOCX`, or `TXT` resume as multipart form data. The endpoint returns regex-extracted contact details, education, skills, projects, experience, certifications, years, and detected sections.
+Submit exactly one resume file (`PDF`, `DOCX`, or `TXT`) or pasted `resume_text` as multipart form data. Optional `target_role` and `job_description` fields customize the role match. The response includes extracted profile data and a report based on detected resume content, role keywords, section headings, action verbs, and numeric evidence. Scores are simple text-based heuristics, not an actual ATS result or hiring prediction. Scanned PDFs without a text layer require OCR before upload.
 
 ```bash
-curl -F "file=@resume.txt" http://localhost:8000/resume/analyze
+curl -F "file=@resume.pdf" \
+  -F "target_role=Data Analyst" \
+  -F "job_description=Python, SQL, Tableau, dashboard reporting" \
+  http://localhost:8000/resume/analyze
+
+curl -F $'resume_text=Alex Chen\n\nSKILLS\nPython, SQL\n\nEXPERIENCE\nBuilt a data report for 20 teams.' \
+  -F "target_role=Software Engineer" \
+  http://localhost:8000/resume/analyze
 ```
 
 ## Run locally
@@ -106,7 +113,9 @@ If the base checkpoint's vocabulary size does not match the tokenizer, retrain t
 
 Open the generated OpenAPI documentation at `http://localhost:8000/docs`.
 
-The app imports without a checkpoint and reports `model_loaded: false`; `/chat` returns HTTP 503 until model paths are configured. This makes development and health checks possible before training is complete.
+Apps created without a manager or configured checkpoint report `model_loaded: false`; `/chat` returns HTTP 503 until a generator is configured. This makes development and health checks possible before training is complete.
+
+The default subject router discovers checkpoint files at startup but loads a model only when a chat prompt first selects that subject. Loaded subject models are cached for later requests. The initial request for a subject therefore includes model-load time; service startup does not load every checkpoint into memory.
 
 ## Scope
 

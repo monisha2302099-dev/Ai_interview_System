@@ -83,6 +83,41 @@ class ApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 422)
 
+    def test_resume_checker_analyzes_pasted_text_and_job_description(self):
+        response = self.make_client().post(
+            "/resume/analyze",
+            data={
+                "resume_text": (
+                    "Alex Chen\n\nSKILLS\nPython, SQL\n\n"
+                    "EXPERIENCE\n- Built a data report used by 20 teams.\n\n"
+                    "EDUCATION\nB.S. Computer Science"
+                ),
+                "target_role": "Data Analyst",
+                "job_description": "Python, SQL, Tableau, dashboards",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result["analysis"]["skillsFound"], ["python", "sql"])
+        self.assertIn("tableau", result["analysis"]["missingSkills"])
+        self.assertEqual(result["profile"]["contact"]["emails"], [])
+
+    def test_resume_checker_analyzes_uploaded_text_file(self):
+        response = self.make_client().post(
+            "/resume/analyze",
+            files={"file": ("resume.txt", "Alex Chen\n\nSKILLS\nPython and SQL\n", "text/plain")},
+            data={"target_role": "Software Engineer"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["filename"], "resume.txt")
+        self.assertIn("python", response.json()["profile"]["skills"])
+
+    def test_resume_checker_requires_one_input_and_rejects_unreadable_text(self):
+        client = self.make_client()
+        self.assertEqual(client.post("/resume/analyze").status_code, 422)
+        response = client.post("/resume/analyze", data={"resume_text": "too short"})
+        self.assertEqual(response.status_code, 422)
+
 
 if __name__ == "__main__":
     unittest.main()

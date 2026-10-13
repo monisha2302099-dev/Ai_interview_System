@@ -4,19 +4,24 @@ from __future__ import annotations
 
 import os
 import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
 import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from pypdf.errors import PdfReadError
+from docx.opc.exceptions import PackageNotFoundError
+from starlette.concurrency import run_in_threadpool
 
 from backend.chatbot.conversation import ConversationManager
 from backend.chatbot.inference import InferenceEngine
 from backend.chatbot.interview_dataset import InterviewDataset
 from backend.chatbot.retrieval import QuestionBankRetriever
-from backend.resume.parser import extract_resume_file
+from backend.resume.analyzer import analyze_resume
+from backend.resume.parser import extract_resume, extract_resume_file
 
 from backend.chatbot.model_router import SubjectModelRouter
 #from backend.chatbot.retrieval import QuestionBankRetriever
@@ -56,7 +61,9 @@ class ChatService:
 
     @property
     def model_loaded(self) -> bool:
-        return self.manager is not None
+        if self.manager is None:
+            return False
+        return bool(getattr(self.manager.generator, "model_loaded", True))
 
     def chat(self, request: ChatRequest) -> dict[str, str]:
         if self.manager is None:
@@ -132,21 +139,54 @@ def create_app(
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.post("/resume/analyze")
-    async def analyze_resume(file: UploadFile = File(...)) -> dict[str, Any]:
-        suffix = Path(file.filename or "").suffix.lower()
-        if suffix not in {".txt", ".pdf", ".docx"}:
-            raise HTTPException(status_code=415, detail="Only PDF, DOCX, and TXT resumes are supported.")
-        content = await file.read()
-        if len(content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="Resume file must be 5 MB or smaller.")
+    async def analyze_resume_endpoint(
+        file: UploadFile | None = File(default=None),
+        resume_text: str | None = Form(default=None, max_length=100_000),
+        target_role: str = Form(default="Software Engineer", max_length=100),
+        job_description: str = Form(default="", max_length=20_000),
+    ) -> dict[str, Any]:
+        if bool(file) == bool(resume_text and resume_text.strip()):
+            raise HTTPException(status_code=422, detail="Provide exactly one resume file or resume_text.")
+
+        filename = file.filename if file else "pasted-resume.txt"
         try:
-            with tempfile.NamedTemporaryFile(suffix=suffix) as temporary_file:
-                temporary_file.write(content)
-                temporary_file.flush()
-                profile = extract_resume_file(temporary_file.name)
-        except (ValueError, OSError) as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return {"filename": file.filename, "profile": profile}
+            if file:
+                suffix = Path(file.filename or "").suffix.lower()
+                if suffix not in {".txt", ".pdf", ".docx"}:
+                    raise HTTPException(
+                        status_code=415,
+                        detail="Only PDF, DOCX, and TXT resumes are supported.",
+                    )
+                content = await file.read(5 * 1024 * 1024 + 1)
+                if len(content) > 5 * 1024 * 1024:
+                    raise HTTPException(status_code=413, detail="Resume file must be 5 MB or smaller.")
+                with tempfile.NamedTemporaryFile(suffix=suffix) as temporary_file:
+                    temporary_file.write(content)
+                    temporary_file.flush()
+                    extracted = await run_in_threadpool(extract_resume_file, temporary_file.name)
+                source_text = extracted["text"]
+                profile = extracted["profile"]
+            else:
+                source_text = resume_text or ""
+                profile = extract_resume(source_text)
+        except HTTPException:
+            raise
+        except (ValueError, OSError, UnicodeDecodeError, PdfReadError, PackageNotFoundError, zipfile.BadZipFile) as exc:
+            raise HTTPException(status_code=422, detail=f"Could not read resume: {exc}") from exc
+
+        if len(source_text.strip()) < 30:
+            raise HTTPException(
+                status_code=422,
+                detail="No readable resume text was found. If this is a scanned PDF, use a text-based PDF or paste the resume text.",
+            )
+
+        result = analyze_resume(
+            source_text,
+            target_role=target_role.strip() or "Software Engineer",
+            job_description=job_description,
+        )
+        result.pop("profile", None)
+        return {"filename": filename, "profile": profile, "analysis": result}
 
     @app.get("/sessions/{session_id}/messages")
     def history(session_id: str) -> dict[str, Any]:

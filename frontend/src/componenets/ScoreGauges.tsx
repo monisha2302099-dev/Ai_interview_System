@@ -113,8 +113,8 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
                 <Award className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Overall Resume Score</h3>
-                <p className="text-[11px] text-slate-400">Holistic quality assessment</p>
+                <h3 className="text-sm font-bold text-slate-900">Resume Checklist Score</h3>
+                <p className="text-[11px] text-slate-400">Heuristic content checks</p>
               </div>
             </div>
             <span
@@ -131,7 +131,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
           <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 text-center">
             {overallScore >= 80 ? (
               <span className="text-emerald-700 font-medium">
-                Excellent! Resume stands out strongly among applicant pools.
+                Most of the measured checklist signals are present.
               </span>
             ) : overallScore >= 60 ? (
               <span className="text-amber-700 font-medium">
@@ -145,7 +145,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
           </div>
         </div>
 
-        {/* ATS Compatibility Score */}
+        {/* Resume Text Checklist Score */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -153,8 +153,8 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
                 <CheckCheck className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">ATS Compatibility</h3>
-                <p className="text-[11px] text-slate-400">Parser readability & formats</p>
+                <h3 className="text-sm font-bold text-slate-900">Structure & Evidence</h3>
+                <p className="text-[11px] text-slate-400">Sections, skills, actions, and metrics</p>
               </div>
             </div>
             <span
@@ -171,15 +171,15 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
           <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 text-center">
             {atsScore >= 80 ? (
               <span className="text-emerald-700 font-medium">
-                Clean formatting; filters and parsers process all sections reliably.
+                The text-based structure and evidence checks are mostly present.
               </span>
             ) : atsScore >= 60 ? (
               <span className="text-amber-700 font-medium">
-                Passable by most ATS engines, but some headers or keywords need clarity.
+                Some structure or evidence signals can be improved.
               </span>
             ) : (
               <span className="text-rose-700 font-medium">
-                Risk of automatic filtering due to missing standard headers or density.
+                Several expected sections or evidence signals were not detected.
               </span>
             )}
           </div>
@@ -213,15 +213,15 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
           <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 text-center">
             {jobMatchScore >= 80 ? (
               <span className="text-emerald-700 font-medium">
-                High alignment with target technical competencies and responsibilities.
+                Most tracked role terms appear in the resume text.
               </span>
             ) : jobMatchScore >= 60 ? (
               <span className="text-amber-700 font-medium">
-                Moderate match. Bridge missing target skills to increase interview invites.
+                Some tracked role terms are missing from the resume text.
               </span>
             ) : (
               <span className="text-rose-700 font-medium">
-                Low correlation with required skills for this target role.
+                Few tracked role terms appear in the resume text.
               </span>
             )}
           </div>
@@ -237,7 +237,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
               Dimensional Score Breakdown
             </h4>
           </div>
-          <span className="text-xs text-slate-400">Recruiter Evaluation Rubric</span>
+          <span className="text-xs text-slate-400">Measured text signals</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -287,7 +287,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/60">
             <div className="flex justify-between items-center mb-1.5">
               <span className="text-xs font-semibold text-slate-700">
-                Keyword Density
+                Role Terms Found
               </span>
               <span className="text-xs font-bold text-emerald-600">
                 {scoreBreakdown.keywordRelevance}%
@@ -300,7 +300,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
               />
             </div>
             <p className="text-[10px] text-slate-400 mt-1.5">
-              Industry terms & tech stack matching
+              Required terms present in the resume text
             </p>
           </div>
 
@@ -321,7 +321,7 @@ export const ScoreGauges: React.FC<ScoreGaugesProps> = ({
               />
             </div>
             <p className="text-[10px] text-slate-400 mt-1.5">
-              Role chronology & scope precision
+              Count of detected experience and project entries
             </p>
           </div>
         </div>

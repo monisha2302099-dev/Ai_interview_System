@@ -75,6 +75,9 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({
               </span>
             )}
           </p>
+          <p className="text-[11px] text-slate-400 mt-1">
+            These text-based estimates may miss context. Review each finding and only use suggestions that accurately describe you; they are not an ATS result or hiring prediction.
+          </p>
         </div>
 
         {/* Action Controls */}
@@ -127,7 +130,7 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          Scores & ATS Metrics
+          Scores & Checklist
         </button>
         <button
           onClick={() => setActiveTab('skills')}
@@ -173,7 +176,7 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({
 
       {/* DASHBOARD SECTIONS */}
 
-      {/* 1. Scores (Overall, ATS, Job Match + Breakdown) */}
+      {/* 1. Heuristic scores and checklist */}
       {(activeTab === 'all' || activeTab === 'scores') && (
         <section className="space-y-6">
           <ScoreGauges

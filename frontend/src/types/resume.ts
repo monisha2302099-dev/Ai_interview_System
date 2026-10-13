@@ -10,7 +10,7 @@ export interface CandidateSummary {
 export interface StrengthItem {
   title: string;
   description: string;
-  impact: 'High' | 'Medium';
+  impact: 'High' | 'Medium' | 'Low';
 }
 
 export interface WeaknessItem {
@@ -74,9 +74,9 @@ export interface ResumeAnalysisResult {
 }
 
 export interface AnalyzeResumeRequest {
+  file?: File;
   fileName?: string;
   fileType?: string;
-  fileBase64?: string;
   resumeText?: string;
   targetRole: string;
   jobDescription?: string;

@@ -18,10 +18,10 @@ export const GrammarIssuesSection: React.FC<GrammarIssuesSectionProps> = ({
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900">
-              Grammar & Phrasing Optimizations
+              Phrasing Flags
             </h3>
             <p className="text-[11px] text-slate-400">
-              Polishing passive voice, tense consistency, and impact diction
+              Basic checks for vague phrasing; this is not a full grammar checker
             </p>
           </div>
         </div>
@@ -32,16 +32,16 @@ export const GrammarIssuesSection: React.FC<GrammarIssuesSectionProps> = ({
               : 'text-blue-700 bg-blue-50 border-blue-200'
           }`}
         >
-          {grammarIssues.length === 0 ? 'No Grammar Flaws' : `${grammarIssues.length} Corrections`}
+          {grammarIssues.length === 0 ? 'No Flags' : `${grammarIssues.length} Flags`}
         </span>
       </div>
 
       {grammarIssues.length === 0 ? (
         <div className="p-6 text-center bg-emerald-50/50 rounded-xl border border-emerald-100">
           <Check className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-          <h4 className="text-sm font-bold text-emerald-900">Spotless Grammar & Phrasing</h4>
+          <h4 className="text-sm font-bold text-emerald-900">No obvious vague phrasing detected</h4>
           <p className="text-xs text-emerald-700 mt-1">
-            No spelling mistakes, syntax issues, or passive phrasing detected in your resume.
+            This lightweight check does not verify spelling or grammar. Proofread the resume before submitting it.
           </p>
         </div>
       ) : (
