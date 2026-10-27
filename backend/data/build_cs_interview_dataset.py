@@ -138,6 +138,25 @@ EXTRA_TOPICS: list[dict[str, Any]] = [
         "comparison": {"other": "stack", "a": "A queue serves the earliest arrival first (FIFO).", "b": "A stack serves the most recent arrival first (LIFO).", "difference": "The removal order differs: queue removes from the front, stack removes from the top.", "pros_a": "Preserves arrival order for fair lines and task scheduling.", "cons_a": "Does not naturally prioritize urgent or reserved entries.", "pros_b": "Efficient for undo operations and nested/recent work.", "cons_b": "Newest entries jump ahead of older ones.", "use_a": "Ticket lines and first-come-first-served work.", "use_b": "Undo history, parsing, and call stacks.", "better": "A queue is better for ordinary ticket entry; use a priority queue if ticket classes override arrival order."},
         "scenario": ("A venue admits ticket holders in arrival order, but VIP ticket holders may enter first. Which structure or policy fits?", "Use a priority queue or separate VIP and general queues with an explicit fairness rule. A plain FIFO queue fits ordinary entry; a stack would reverse arrival order."),
     },
+    {
+        "subject": "Blockchain",
+        "topic": "blockchain",
+        "skills": ["blockchain", "distributed systems", "security"],
+        "job_roles": ["Blockchain Developer"],
+        "question_type": "definition",
+        "question": "What is blockchain?",
+        "simple_answer": "Blockchain is a shared digital ledger that records transactions in linked blocks across a network.",
+        "book_definition": "A blockchain is a distributed ledger in which records are grouped into cryptographically linked blocks.",
+        "example": "A blockchain network can record transactions so participants can verify the shared transaction history.",
+        "reference_answer": "Blockchain is a distributed ledger that stores records in blocks linked using cryptographic hashes. Copies of the ledger are maintained across network participants, and consensus mechanisms help participants agree on valid updates.",
+        "key_points": [
+            "distributed ledger shared across network participants",
+            "records grouped into blocks",
+            "blocks linked using cryptographic hashes",
+            "consensus helps validate updates"
+        ],
+        "common_misconceptions": [],
+    },
 ]
 
 # Each record is original instructional material, not copied from an external source.

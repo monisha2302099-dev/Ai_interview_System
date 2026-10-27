@@ -453,10 +453,11 @@ class QuestionBankRetriever:
 
             response = (
                 "## Answer Evaluation\n\n"
-                f"**Score: {score:g}/10**\n\n"
-                f"**Question:** {record.get('question', record.get('topic', ''))}\n\n"
-                "### What you got right\n"
+                f"**{score:g}/10**\n\n"
+                "### Why it is good\n"
                 f"{strengths_text}\n\n"
+                "### Small improvement\n"
+                f"{missing_text}\n\n"
                 "### Mistakes\n"
                 f"{mistakes_text}\n\n"
                 "### Missing points\n"
@@ -464,17 +465,17 @@ class QuestionBankRetriever:
             )
 
             if relevance is not None:
-                response += f"**Relevance:** {relevance}\n\n"
+                response += f"Relevance: {relevance}.\n\n"
 
             response += (
-                "### Ideal answer / improvement\n"
+                "### Better interview answer\n"
                 f"{improved_answer}"
             )
 
             return response
 
         # 2. Handle comparisons.
-        comparison_requested = any(
+        comparison_requested = bool(re.search(r"\bdiff\b", normalized)) or any(
             marker in normalized
             for marker in (
                 "compare",

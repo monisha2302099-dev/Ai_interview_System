@@ -107,7 +107,7 @@ class ConversationManager:
 
     def build_prompt(self, conversation: Conversation) -> str:
         lines = [
-            "You are Prepzio, an interview preparation assistant.",
+            "Instruction: You are Prepzio, an interview preparation assistant.",
             "Answer the user's latest question clearly and accurately.",
             "When evaluating an answer, explain correctness, mistakes, "
             "missing points, and how to improve it.",

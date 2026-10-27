@@ -48,6 +48,22 @@ _CONCEPT_ALIASES: dict[str, set[str]] = {
     "constant time": {"constant time", "o 1", "o1", "instant lookup", "expected constant"},
     "isolation": {"isolated", "isolation", "separate address space", "fault containment"},
     "shared memory": {"shared memory", "share memory", "same address space"},
+
+    # General computer science and programming concepts
+    "distributed ledger": {"distributed ledger", "decentralized ledger", "shared digital ledger", "shared transaction record"},
+    "cryptographic linking": {"cryptographic linking", "cryptographic hashes", "hash-linked blocks", "blocks linked by hashes", "linked using cryptography"},
+    "consensus": {"consensus", "agreement among nodes", "network agreement", "agree on valid updates", "agree on the same state"},
+    "decentralization": {"decentralized", "distributed across nodes", "no central authority", "without a central server", "peer to peer"},
+    "tamper resistance": {"tamper resistant", "difficult to alter", "hard to modify", "cannot easily be changed", "immutable records"},
+    "encapsulation": {"encapsulation", "data hiding", "bundling data and methods", "restricting direct access"},
+    "inheritance": {"inheritance", "derived class", "child class", "parent class", "base class", "reuse properties and methods"},
+    "polymorphism": {"polymorphism", "many forms", "same interface different behavior", "different implementations"},
+    "abstraction": {"abstraction", "hide implementation details", "expose essential features", "show only necessary details"},
+    "database normalization": {"normalization", "database normalization", "reduce data redundancy", "avoid duplicate data", "prevent update anomalies"},
+    "referential integrity": {"referential integrity", "foreign key constraint", "maintain valid relationships", "references an existing row"},
+    "concurrency": {"concurrent execution", "multiple tasks at once", "simultaneous execution", "overlapping execution"},
+    "deadlock": {"deadlock", "circular wait", "processes waiting for each other", "mutually waiting processes"},
+    "http communication": {"http", "request response protocol", "client server communication", "web requests and responses"},
 }
 _NEGATION_WORDS = {
     "not", "no", "never", "without", "cannot", "can't", "doesn't", "dont",
