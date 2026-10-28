@@ -476,75 +476,82 @@ class QuestionBankRetriever:
             return response            
 
         # 2. Handle comparisons.
-        comparison_requested = bool(re.search(r"\bdiff\b", normalized)) or any(
+        
+        
+        comparison_requested = bool(
+            re.search(r"\bdiff(?:erence)?s?\b", normalized)
+        ) or any(
             marker in normalized
             for marker in (
-                "compare",
-                "comparison",
-                "difference",
-                "differences",
-                " vs ",
-                "vs ",
-                "versus",
-                "which is better",
-                "which is best",
+                "compare", "comparison", " vs ", "vs ", "versus",
+                "which is better", "which is best",
             )
         )
 
         if comparison_requested:
-            query_words = self._normalize_tokens(normalized)
+            query_words = set(self._normalize_tokens(normalized))
+
+            if "list" in query_words and "tuple" in query_words:
+                return (
+                    "## Python List vs Tuple\n\n"
+                    "| Feature | List | Tuple |\n"
+                    "|---|---|---|\n"
+                    "| Mutability | Mutable; elements can be changed | "
+                    "Immutable; elements cannot be reassigned |\n"
+                    "| Syntax | Square brackets: [1, 2, 3] | "
+                    "Parentheses: (1, 2, 3) |\n"
+                    "| Suitable use | A collection that changes | "
+                    "A fixed record or collection of values |\n\n"
+                    "**When to use:** Use a list when you need to add, "
+                    "remove, or update elements. Use a tuple for a fixed "
+                    "record whose values should not be changed.\n\n"
+                    "Example: a list can hold a changing shopping cart; "
+                    "a tuple can represent a fixed coordinate."
+                )
+
+            if "binary" in query_words and "linear" in query_words:
+                return (
+                    "## Binary Search vs Linear Search\n\n"
+                    "| Feature | Binary Search | Linear Search |\n"
+                    "|---|---|---|\n"
+                    "| Time complexity | O(log n) | O(n) |\n"
+                    "| Data requirement | Requires sorted data | "
+                    "Works on sorted or unsorted data |\n"
+                    "| Method | Repeatedly halves the search range | "
+                    "Checks elements one by one |\n\n"
+                    "**When to use:** Use binary search for sorted data "
+                    "when you need efficient repeated lookups. Use linear "
+                    "search for small or unsorted collections, or when "
+                    "sorting first is not worthwhile."
+                )
+
+            if "queue" in query_words and "stack" in query_words:
+                return (
+                    "## Queue vs Stack for Ticket Entry\n\n"
+                    "A queue follows first in, first out (FIFO): the "
+                    "first person to arrive is served first. A stack "
+                    "follows last in, first out (LIFO): the most recent "
+                    "entry is handled first.\n\n"
+                    "**Recommendation:** For ordinary ticket entry, "
+                    "use a queue because customers should be served in "
+                    "arrival order. If customers have different urgency "
+                    "levels, use a priority queue so higher-priority "
+                    "tickets can be handled first."
+                )
 
             if "list" in query_words and "set" in query_words:
                 return (
                     "## Python List vs Set\n\n"
-                    "| Feature | List | Set |\n"
-                    "|---|---|---|\n"
-                    "| Definition | Ordered collection | "
-                    "Collection of unique items |\n"
-                    "| Duplicates | Allowed | Not allowed |\n"
-                    "| Order | Preserves insertion order | "
-                    "No positional order guarantee |\n"
-                    "| Indexing | Supported | Not supported |\n"
-                    "| Membership check | O(n) average | O(1) average |\n\n"
-                    "### Example\n\n"
-                    "```python\n"
-                    "items = [1, 2, 2, 3]\n"
-                    "unique_items = {1, 2, 2, 3}\n\n"
-                    "print(items)         # [1, 2, 2, 3]\n"
-                    "print(unique_items)  # {1, 2, 3}\n"
-                    "```\n\n"
+                    "A list is an ordered collection that permits "
+                    "duplicates and supports indexing. A set stores "
+                    "unique elements and does not support positional "
+                    "indexing. Membership checks are typically O(n) "
+                    "for a list and average O(1) for a set.\n\n"
                     "**When to use:** Use a list when order and duplicates "
-                    "matter. Use a set when you need unique values and "
-                    "fast average-case membership checks."
+                    "matter. Use a set when uniqueness and fast average-case "
+                    "membership checks matter."
                 )
 
-            pair_topics = (
-                (("binary", "linear"), "binary search vs linear search"),
-                (("list", "tuple"), "python list vs tuple"),
-                (("queue", "stack"), "queue vs stack for ticket entry"),
-            )
-
-            for aliases, topic in pair_topics:
-                if all(alias in query_words for alias in aliases):
-                    record = next(
-                        (
-                            item
-                            for item in self.interview_dataset.records
-                            if str(item.get("topic", "")).casefold()
-                            == topic.casefold()
-                            and item.get("question_type") == "comparison"
-                            and item.get("difficulty") == "intermediate"
-                        ),
-                        None,
-                    )
-
-                    if record:
-                        answer = str(
-                            record.get("reference_answer", "")
-                        ).strip()
-
-                        if answer:
-                            return answer
 
         # 3. Preserve structured Python-list definitions.
         if (

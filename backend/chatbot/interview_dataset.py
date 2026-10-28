@@ -214,28 +214,142 @@ class InterviewDataset:
         if len(self._records_by_id) != len(self.records):
             raise ValueError(f"Duplicate question IDs in {self.dataset_path}")
 
+
     def _load_records(self) -> list[dict[str, Any]]:
         if not self.dataset_path.is_file():
             raise FileNotFoundError(
                 f"Interview dataset not found at {self.dataset_path}. "
                 "Run python backend/data/build_cs_interview_dataset.py."
             )
+
+        required = {
+            "id", "subject", "topic", "difficulty",
+            "question", "reference_answer", "key_points"
+        }
+
         records: list[dict[str, Any]] = []
-        for line_number, line in enumerate(self.dataset_path.read_text(encoding="utf-8").splitlines(), 1):
+        seen_ids: set[str] = set()
+        seen_questions: set[str] = set()
+
+        def add_record(record: dict[str, Any]) -> None:
+            question = str(record.get("question", "")).strip()
+            record_id = str(record.get("id", "")).strip()
+
+            if not question or not record_id:
+                return
+
+            question_key = _normalize(question)
+
+            if record_id in seen_ids or question_key in seen_questions:
+                return
+
+            seen_ids.add(record_id)
+            seen_questions.add(question_key)
+            records.append(record)
+
+        # Load the existing structured interview dataset first.
+        for line_number, line in enumerate(
+            self.dataset_path.read_text(encoding="utf-8").splitlines(), 1
+        ):
             if not line.strip():
                 continue
+
             try:
                 record = json.loads(line)
             except json.JSONDecodeError as exc:
-                raise ValueError(f"Invalid JSON at {self.dataset_path}:{line_number}: {exc}") from exc
-            required = {"id", "subject", "topic", "difficulty", "question", "reference_answer", "key_points"}
+                raise ValueError(
+                    f"Invalid JSON at {self.dataset_path}:{line_number}: {exc}"
+                ) from exc
+
             missing = required - record.keys()
             if missing:
-                raise ValueError(f"Missing dataset fields at {self.dataset_path}:{line_number}: {sorted(missing)}")
-            records.append(record)
+                raise ValueError(
+                    f"Missing dataset fields at "
+                    f"{self.dataset_path}:{line_number}: {sorted(missing)}"
+                )
+
+            add_record(record)
+
+        # Map existing subject-specific training files to display names.
+        subject_files = {
+            "blockchain": ("Blockchain", ["blockchain"]),
+            "c": ("C", ["c", "programming"]),
+            "cn": ("Computer Networks", ["computer networks", "cn"]),
+            "cpp": ("C++", ["cpp", "programming"]),
+            "dbms": ("DBMS", ["dbms", "sql", "database"]),
+            "ds": ("Data Science", ["data science", "programming"]),
+            "html": ("HTML", ["html", "frontend"]),
+            "java": ("Java", ["java", "programming"]),
+            "os": ("Operating Systems", ["operating systems", "os"]),
+            "python": ("Python", ["python", "programming"]),
+        }
+
+        # Add questions from existing subject training files.
+        for file_path in sorted(self.dataset_path.parent.glob("*_train.jsonl")):
+            subject_key = file_path.name.removesuffix("_train.jsonl")
+
+            # These files do not use the subject-question format.
+            if subject_key not in subject_files:
+                continue
+
+            subject_name, subject_skills = subject_files[subject_key]
+
+            for line_number, line in enumerate(
+                file_path.read_text(encoding="utf-8").splitlines(), 1
+            ):
+                if not line.strip():
+                    continue
+
+                try:
+                    source = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    raise ValueError(
+                        f"Invalid JSON at {file_path}:{line_number}: {exc}"
+                    ) from exc
+
+                text = str(source.get("text", ""))
+                if "Question:" not in text or "Answer:" not in text:
+                    continue
+
+                question_text = text.split("Question:", 1)[1].split(
+                    "Answer:", 1
+                )[0].strip()
+
+                answer_text = text.split("Answer:", 1)[1].strip()
+
+                if not question_text or not answer_text:
+                    continue
+
+                # The source files do not provide difficulty or key points.
+                # Use a fallback difficulty and derive basic evaluation points.
+                key_points = [
+                    part.strip(" -*\t")
+                    for part in answer_text.replace("\n", " ").split(".")
+                    if len(part.strip()) >= 15
+                ][:5]
+
+                record = {
+                    "id": str(source.get("id", "")).strip(),
+                    "subject": subject_name,
+                    "topic": subject_name,
+                    "difficulty": "intermediate",
+                    "question_type": "general",
+                    "question": question_text,
+                    "reference_answer": answer_text,
+                    "key_points": key_points,
+                    "skills": subject_skills,
+                    "job_roles": [],
+                }
+
+                add_record(record)
+
         if not records:
-            raise ValueError(f"Interview dataset is empty: {self.dataset_path}")
+            raise ValueError(
+                f"No usable interview questions found in {self.dataset_path}"
+            )
+
         return records
+
 
     def _load_roles(self) -> dict[str, dict[str, Any]]:
         if not self.role_path.is_file():
@@ -265,71 +379,151 @@ class InterviewDataset:
     ) -> list[dict[str, Any]]:
         if count < 1 or count > 50:
             raise ValueError("count must be between 1 and 50")
-        if difficulty is not None and _normalize(difficulty) not in {"easy", "intermediate", "advanced"}:
+
+        if difficulty is not None and _normalize(difficulty) not in {
+            "easy", "intermediate", "advanced"
+        }:
             raise ValueError("difficulty must be easy, intermediate, or advanced")
 
-        selected_role: dict[str, Any] | None = None
+        selected_role = None
+        canonical_role = None
+
         if job_role:
-            selected_role = next(
-                (value for key, value in self.roles.items() if _normalize(key) == _normalize(job_role)),
+            matched_role = next(
+                (
+                    (key, value)
+                    for key, value in self.roles.items()
+                    if _normalize(key) == _normalize(job_role)
+                ),
                 None,
             )
-            if selected_role is None:
+            if matched_role is None:
                 raise ValueError(f"Unknown job role: {job_role}")
+
+            canonical_role, selected_role = matched_role
 
         normalized_subject = _normalize(subject) if subject else None
         known_subjects = {_normalize(value) for value in self.subjects()}
+
         if normalized_subject and normalized_subject not in known_subjects:
             raise ValueError(f"Unknown subject: {subject}")
 
-        requested_skills = {_normalize(skill) for skill in (skills or []) if skill.strip()}
-        if selected_role and requested_skills:
-            role_skills = {_normalize(skill) for skill in selected_role["skills"]}
-            unknown_role_skills = requested_skills - role_skills
-            if unknown_role_skills:
+        requested_skills = {
+            _normalize(skill)
+            for skill in (skills or [])
+            if skill.strip()
+        }
+
+        role_skills = set()
+        role_subjects = set()
+
+        if selected_role:
+            role_skills = {
+                _normalize(skill)
+                for skill in selected_role.get("skills", [])
+            }
+            role_subjects = {
+                _normalize(item)
+                for item in selected_role.get("subjects", [])
+            }
+
+            invalid_skills = requested_skills - role_skills
+            if invalid_skills:
                 raise ValueError(
-                    f"Skills are not listed for {job_role}: {', '.join(sorted(unknown_role_skills))}"
+                    f"Skills are not listed for {canonical_role}: "
+                    f"{', '.join(sorted(invalid_skills))}"
                 )
 
         candidates = []
+
         for record in self.records:
-            if selected_role and job_role not in record["job_roles"]:
-                # Job-role spelling is canonical in the generated records.
-                canonical_role = next(key for key in self.roles if _normalize(key) == _normalize(job_role or ""))
-                if canonical_role not in record["job_roles"]:
-                    continue
-            if normalized_subject and _normalize(record["subject"]) != normalized_subject:
+            record_subject = _normalize(str(record.get("subject", "")))
+            record_skills = {
+                _normalize(skill)
+                for skill in record.get("skills", [])
+            }
+            record_roles = {
+                _normalize(role)
+                for role in record.get("job_roles", [])
+            }
+
+            # Apply any explicitly requested subject or difficulty.
+            if normalized_subject and record_subject != normalized_subject:
                 continue
-            if difficulty and record["difficulty"] != _normalize(difficulty):
+
+            if difficulty and _normalize(
+                str(record.get("difficulty", ""))
+            ) != _normalize(difficulty):
                 continue
-            if requested_skills:
-                record_skills = {_normalize(skill) for skill in record["skills"]}
-                if not requested_skills.intersection(record_skills):
+
+            # If skills were explicitly requested, require a skill match.
+            if requested_skills and not requested_skills.intersection(
+                record_skills
+            ):
+                continue
+
+            priority = 0
+
+            if selected_role:
+                subject_match = record_subject in role_subjects
+                exact_role_match = _normalize(canonical_role) in record_roles
+
+                # Only allow questions tagged for this role
+                # or belonging to its configured subjects.
+                if not (exact_role_match or subject_match):
                     continue
-            candidates.append(record)
+
+                if exact_role_match:
+                    priority = 0
+                else:
+                    priority = 1             
+
+            candidates.append((priority, record))
+
+        # Prioritize role-specific questions without discarding relevant
+        # questions from the existing dataset.
+        candidates.sort(key=lambda item: item[0])
+
         if not candidates:
             return []
 
-        # Round-robin topics so larger batches cover the requested domain broadly.
+        # Rotate through topics to provide variety in the question batch.
         by_topic: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        for record in candidates:
-            by_topic[record["topic"]].append(record)
+
+        for _, record in candidates:
+            by_topic[str(record.get("topic", "General"))].append(record)
+
+        result = []
         topic_order = list(by_topic)
-        result: list[dict[str, Any]] = []
+
         while len(result) < min(count, len(candidates)):
             added = False
+
             for topic in topic_order:
                 if by_topic[topic] and len(result) < count:
                     result.append(by_topic[topic].pop(0))
                     added = True
+
             if not added:
                 break
+
         public_fields = {
-            "id", "subject", "topic", "skills", "job_roles", "difficulty",
-            "question_type", "question",
+            "id",
+            "subject",
+            "topic",
+            "skills",
+            "job_roles",
+            "difficulty",
+            "question_type",
+            "question",
         }
+
         return [
-            {key: value for key, value in record.items() if key in public_fields}
+            {
+                key: value
+                for key, value in record.items()
+                if key in public_fields
+            }
             for record in result
         ]
 
