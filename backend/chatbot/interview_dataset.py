@@ -50,9 +50,9 @@ _CONCEPT_ALIASES: dict[str, set[str]] = {
     "shared memory": {"shared memory", "share memory", "same address space"},
 
     # General computer science and programming concepts
+    "cryptographic linking": {"cryptographic linking", "cryptographic hashes", "hash-linked blocks", "blocks linked by hashes", "linked using cryptography", "blocks linked together using cryptography", "transactions in blocks linked together using cryptography", "blocks are linked using hashes", "blocks are linked together", "blocks linked using cryptography"},
+    "consensus": {"consensus", "agreement among nodes", "network agreement", "agree on valid updates", "agree on the same state", "consensus mechanism", "consensus mechanisms", "validate transactions", "validate updates", "agree on valid transactions"},
     "distributed ledger": {"distributed ledger", "decentralized ledger", "shared digital ledger", "shared transaction record"},
-    "cryptographic linking": {"cryptographic linking", "cryptographic hashes", "hash-linked blocks", "blocks linked by hashes", "linked using cryptography"},
-    "consensus": {"consensus", "agreement among nodes", "network agreement", "agree on valid updates", "agree on the same state"},
     "decentralization": {"decentralized", "distributed across nodes", "no central authority", "without a central server", "peer to peer"},
     "tamper resistance": {"tamper resistant", "difficult to alter", "hard to modify", "cannot easily be changed", "immutable records"},
     "encapsulation": {"encapsulation", "data hiding", "bundling data and methods", "restricting direct access"},

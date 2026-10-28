@@ -448,6 +448,11 @@ class QuestionBankRetriever:
                 or result.get("improvement")
                 or "Review the missing points and improve your answer."
             )
+            small_improvement_text = (
+                result.get("small_improvement")
+                or result.get("improvement")
+                or missing_text
+            )
 
             relevance = result.get("relevance")
 
@@ -457,11 +462,7 @@ class QuestionBankRetriever:
                 "### Why it is good\n"
                 f"{strengths_text}\n\n"
                 "### Small improvement\n"
-                f"{missing_text}\n\n"
-                "### Mistakes\n"
-                f"{mistakes_text}\n\n"
-                "### Missing points\n"
-                f"{missing_text}\n\n"
+                f"{small_improvement_text}\n\n"
             )
 
             if relevance is not None:
@@ -472,7 +473,7 @@ class QuestionBankRetriever:
                 f"{improved_answer}"
             )
 
-            return response
+            return response            
 
         # 2. Handle comparisons.
         comparison_requested = bool(re.search(r"\bdiff\b", normalized)) or any(

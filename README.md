@@ -9,18 +9,18 @@ This phase establishes the boundaries for the later implementation:
 ```text
 .
 ├── backend/
-│   ├── chatbot/          # Conversation and inference logic (later phase)
+│   ├── chatbot/          # Conversation and inference logic
 │   ├── data/
 │   │   ├── raw/          # Untouched source material
 │   │   ├── processed/    # Cleaned/generated data
 │   │   ├── train.jsonl
 │   │   ├── validation.jsonl
 │   │   └── test.jsonl
-│   ├── model/            # Tokenizer and Transformer modules (later phases)
-│   ├── resume/           # Resume parsing and analysis (later phase)
-│   └── training/         # Dataset, training, and evaluation code (later phases)
-├── checkpoints/          # Saved model weights; ignored by Git
-├── frontend/             # React application (later phase)
+│   ├── model/            # Tokenizer and Transformer modules
+│   ├── resume/           # Resume parsing and analysis 
+│   └── training/         # Dataset, training, and evaluation code
+├── checkpoints/          # Saved model weights
+├── frontend/             # React application 
 ├── requirements.txt
 └── README.md
 ```

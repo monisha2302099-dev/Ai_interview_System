@@ -65,7 +65,7 @@ class QuestionBankRetrieverTests(unittest.TestCase):
         )
         self.assertIn("6.7/10", answer)
         self.assertIn("### Why it is good", answer)
-        self.assertIn("### Missing points", answer)
+        self.assertIn("### Small improvement", answer)
         self.assertIn("### Better interview answer", answer)
         self.assertIn("try/except", answer)
 
