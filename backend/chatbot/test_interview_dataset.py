@@ -17,7 +17,7 @@ class InterviewDatasetTests(unittest.TestCase):
             "Computer Vision", "Cybersecurity", "Cloud Computing", "DevOps",
             "System Design", "Distributed Systems", "Blockchain", "Data Science",
             "Software Testing", "Git and GitHub", "API and Web Services", "IoT",
-            "Theory of Computation", "Compiler Design",
+            "Theory of Computation", "Compiler Design","C", "C++", "Python", "Java", "HTML",
         }
         expected_roles = {
             "Software Developer", "Python Developer", "Java Developer",

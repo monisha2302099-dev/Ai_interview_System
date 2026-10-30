@@ -116,7 +116,10 @@ class ModelRouterTests(unittest.TestCase):
             load_model.assert_called_once()
 
     def test_blockchain_checkpoint_folder_matches_router(self):
-        self.assertEqual(SubjectModelRouter.CHECKPOINTS["chain"], "blockchain")
+        self.assertEqual(
+            SubjectModelRouter.CHECKPOINTS["blockchain"],
+            "blockchain",
+       )
 
 
 if __name__ == "__main__":

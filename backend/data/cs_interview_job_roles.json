@@ -1,5 +1,7 @@
 {
   "Software Developer": {
+
+    
     "skills": [
       "programming",
       "data structures",
@@ -138,18 +140,21 @@
   },
   "Data Analyst": {
     "skills": [
-      "sql",
-      "dbms",
-      "statistics",
-      "data science",
-      "programming",
-      "cloud"
-    ],
-    "subjects": [
-      "DBMS",
-      "Cloud Computing",
-      "Data Science"
-    ]
+    "python",
+    "sql",
+    "excel",
+    "statistics",
+    "data analysis",
+    "data science",
+    "dbms"
+  ],
+  "subjects": [
+    "Python",
+    "SQL",
+    "Statistics",
+    "Data Science",
+    "DBMS"
+  ]
   },
   "Data Scientist": {
     "skills": [

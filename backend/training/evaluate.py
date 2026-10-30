@@ -180,7 +180,10 @@ def main() -> None:
     parser.add_argument("--details-out", type=Path, default=None, help="optional JSON file with per-question results")
     args = parser.parse_args()
 
-    device = torch.device("cuda" if args.device == "auto" and torch.cuda.is_available() else args.device)
+    if args.device == "auto":
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(args.device)
     tokenizer = InterviewTokenizer.load(args.vocabulary)
     model, checkpoint = load_checkpoint_model(args.checkpoint, device=device)
 

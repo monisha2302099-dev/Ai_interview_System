@@ -22,10 +22,14 @@ class SubjectModelRouter:
         "cpp": "cpp",
         "ds": "ds",
         "dbms": "dbms",
+        "sql": "sql",
         "os": "os",
         "cn": "cn",
         "html": "html",
-        "chain": "blockchain",
+        "blockchain": "blockchain",
+        "cloud": "cloud",
+        "statistics": "statics",
+        "dataScience": "datasicence",
     }
 
     def __init__(
@@ -81,16 +85,24 @@ class SubjectModelRouter:
 
         # Check multiword and overlapping names before shorter names.
         rules = [
-            ("cpp", r"\bc\+\+\b|\bcpp\b|c plus plus"),
+            ("cpp", r"\bc\+\+(?!\w)|\bcpp\b|c plus plus"),
             ("python", r"\bpython\b|\bpythonic\b"),
             ("java", r"\bjava\b|\bjvm\b|\bjdk\b|\bjre\b"),
-            ("ds", r"\bdata structures?\b|\bstack\b|\bqueue\b|\blinked lists?\b|\bbinary trees?\b|\bbst\b|\bhash ?maps?\b|\btime complexity\b"),
-            ("dbms", r"\bdbms\b|\bsql\b|\bdatabase\b|\bnormalization\b|\bjoins?\b|\btransactions?\b"),
+
+            ("dataScience", r"\bdata science\b|\bdata scientist\b|\bmachine learning\b|\bdata analysis\b|\bexploratory data analysis\b"),
+            ("statistics", r"\bstatistics?\b|\bstatistical\b|\bprobability\b|\bhypothesis testing\b|\bstandard deviation\b|\bregression\b"),
+            ("cloud", r"\bcloud computing\b|\bcloud services?\b|\baws\b|\bazure\b|\bgcp\b|\bvirtual machines?\b|\bcontainers?\b"),
+
+            ("ds", r"\bdata structures?\b|\bstack\b|\bqueue\b|\blinked lists?\b|\bbinary trees?\b|\bbst\b|\bhash ?maps?\b|\btime complexity\b|\bgraphs?\b|\bheap\b"),
+            ("sql", r"\bsql\b|\bqueries\b|\bselect statement\b|\bgroup by\b|\bsubqueries\b|\bstored procedures?\b"),
+            ("dbms", r"\bdbms\b|\bdatabase\b|\bnormalization\b|\bjoins?\b|\btransactions?\b"),
+
             ("os", r"\boperating systems?\b|\bprocess scheduling\b|\bdeadlocks?\b|\bvirtual memory\b|\bthreads?\b"),
-            ("cn", r"\bhttp\b|\bhttps\b|\brest api\b|\bcomputer networks?\b|\bnetworking\b|\btcp\b|\budp\b|\bosi model\b|\bip address\b|\bdns\b"),
+            ("cn", r"\bcomputer networks?\b|\bnetworking\b|\btcp\b|\budp\b|\bosi model\b|\bip address\b|\bdns\b|\bhttp\b|\bhttps\b"),
             ("html", r"\bhtml\b|\bcss\b|\bjavascript\b|\bdom\b|\bweb page\b"),
-            ("chain", r"\bblockchain\b|\bsmart contracts?\b|\bdistributed ledger\b"),
+            ("blockchain", r"\bblockchain\b|\bsmart contracts?\b|\bdistributed ledger\b"),
             ("c", r"\blanguage c\b|\bc programming\b|\bpointer\b|\bmalloc\b|\bprintf\b|\bscanf\b"),
+        
         ]
 
         for subject, pattern in rules:
